@@ -22,6 +22,10 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostAsync( string text )
     {
+        if ( string.IsNullOrEmpty( text ) )
+        {
+            return Page();
+        }
         _logger.LogDebug( text );
 
         string id = Guid.NewGuid().ToString();
