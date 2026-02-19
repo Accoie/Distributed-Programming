@@ -26,6 +26,7 @@ public class IndexModel : PageModel
         {
             return Page();
         }
+
         _logger.LogDebug( text );
 
         string id = Guid.NewGuid().ToString();
@@ -61,7 +62,6 @@ public class IndexModel : PageModel
 
         foreach ( char c in text )
         {
-
             bool isAlphabetic =
                 ( c >= 'A' && c <= 'Z' ) ||  
                 ( c >= 'a' && c <= 'z' ) ||

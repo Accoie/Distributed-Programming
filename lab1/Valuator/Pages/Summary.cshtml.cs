@@ -13,10 +13,10 @@ public class SummaryModel : PageModel
     private readonly ILogger<SummaryModel> _logger;
     private readonly IDatabase _database;
 
-    public SummaryModel(ILogger<SummaryModel> logger, IDatabase redis)
+    public SummaryModel(ILogger<SummaryModel> logger, IDatabase database)
     {
         _logger = logger;
-        _database = redis;
+        _database = database;
     }
 
     public double Rank { get; set; }

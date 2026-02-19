@@ -10,8 +10,7 @@ public class Program
 
         builder.Services.AddSingleton( sp =>
         {
-            var configuration = builder.Configuration.GetConnectionString( "Redis" )
-                ?? "localhost:6379,abortConnect=false";
+            var configuration = builder.Configuration.GetConnectionString( "Redis" );
             var redis = ConnectionMultiplexer.Connect( configuration );
             return redis.GetDatabase();
         } );

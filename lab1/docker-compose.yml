@@ -7,8 +7,8 @@ services:
     depends_on:
       - redis
     environment:
-      - RedisConnection=redis:6379,abortConnect=false
-      - ASPNETCORE_ENVIRONMENT=Development
+      - REDIS_CONNECTION=${REDIS_CONNECTION}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
     ports:
       - "8080:80"  
     volumes:
