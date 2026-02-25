@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
 
 namespace Valuator;
@@ -15,7 +16,10 @@ public class Program
             return redis.GetDatabase();
         } );
 
-        builder.Services.AddRazorPages();
+        builder.Services.AddRazorPages( options =>
+        {
+            options.Conventions.ConfigureFilter( new IgnoreAntiforgeryTokenAttribute() );
+        } );
 
         var app = builder.Build();
 
