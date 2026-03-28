@@ -1,18 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
+using Valuator.Services;
 
 namespace Valuator;
 
-public class Program
+public class  Program
 {
     public static void Main(string[] args)
     {
-        var builder = WebApplication.CreateBuilder(args);
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddSingleton( sp =>
         {
-            var configuration = builder.Configuration.GetConnectionString( "Redis" );
-            var redis = ConnectionMultiplexer.Connect( configuration );
+            string? configuration = builder.Configuration.GetConnectionString( "Redis" );
+            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect( configuration );
             return redis.GetDatabase();
         } );
 
@@ -20,8 +21,8 @@ public class Program
         {
             options.Conventions.ConfigureFilter( new IgnoreAntiforgeryTokenAttribute() );
         } );
-
-        var app = builder.Build();
+        builder.Services.AddScoped<IProducerService, ProducerService>();  
+        WebApplication app = builder.Build();
 
         if (!app.Environment.IsDevelopment())
         {

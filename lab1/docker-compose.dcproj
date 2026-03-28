@@ -13,4 +13,12 @@
     <None Include="docker-compose.yml" />
     <None Include=".dockerignore" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include=".env" />
+    <Content Include=".env.template" />
+    <Content Include="docker-compose.infrastructure.yml" />
+    <Content Include="docker-compose.nginx.yml" />
+    <Content Include="docker-compose.rank-calculators.yml" />
+    <Content Include="docker-compose.valuators.yml" />
+  </ItemGroup>
 </Project>
