@@ -24,7 +24,7 @@ public class Consumer : IConsumer
     public Consumer(IDatabase redisDb)
     {
         _redisDb = redisDb;
-    
+
         _rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST")!;
         _rabbitPort = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT")!);
         _rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_USER")!;
@@ -42,7 +42,7 @@ public class Consumer : IConsumer
 
         Console.WriteLine($"Consumer успешно подключён к очереди: {_rabbitQueue}");
     }
-    
+
     private async Task InitializeRabbitQueue()
     {
         await _channel!.ExchangeDeclareAsync(
@@ -51,7 +51,7 @@ public class Consumer : IConsumer
             durable: true,
             autoDelete: false
         );
-    
+
         await _channel.QueueDeclareAsync(
             queue: _rabbitQueue,
             durable: true,
@@ -59,16 +59,16 @@ public class Consumer : IConsumer
             autoDelete: false,
             arguments: null
         );
-    
+
         await _channel.QueueBindAsync(
             queue: _rabbitQueue,
             exchange: _rabbitExchange,
             routingKey: _routingKey
         );
-    
+
         await _channel!.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false);
     }
-    
+
     public async Task ClearConnections()
     {
         if (_channel != null)
@@ -81,7 +81,7 @@ public class Consumer : IConsumer
             await _connection.CloseAsync();
         }
     }
-    
+
     private async Task InitializeConnectionRabbitMq()
     {
         Console.WriteLine($"Подключение к RabbitMQ: {_rabbitHost}:{_rabbitPort}");
@@ -95,12 +95,12 @@ public class Consumer : IConsumer
             AutomaticRecoveryEnabled = true
         };
 
-        _connection = await factory.CreateConnectionAsync();      
+        _connection = await factory.CreateConnectionAsync();
         _channel = await _connection.CreateChannelAsync();
-        
+
         await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false);
     }
-    
+
     private async Task InitializeConsumer()
     {
         AsyncEventingBasicConsumer consumer = new(_channel!);
@@ -118,7 +118,7 @@ public class Consumer : IConsumer
         try
         {
             RankTask? task = await ExtractTaskFromMessageAsync(ea);
-            
+
             if (task == null)
             {
                 await _channel!.BasicNackAsync(ea.DeliveryTag, false, false);
@@ -140,11 +140,12 @@ public class Consumer : IConsumer
     private async Task HandleTask(BasicDeliverEventArgs ea, RankTask task)
     {
         Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Обработка задачи: {task.Id}");
-
-        double rank = CalculateRank(task.Text);
+        
+        string text = _redisDb.StringGet(task.TextKey)!;
+        double rank = CalculateRank(text);
         await _redisDb.StringSetAsync(task.RankKey, rank.ToString(CultureInfo.InvariantCulture));
-        await _channel!.BasicAckAsync(ea.DeliveryTag, false);
 
+        await _channel!.BasicAckAsync(ea.DeliveryTag, false);
         Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Готово: {task.Id} → ранг = {rank:F4}");
     }
 
@@ -152,9 +153,9 @@ public class Consumer : IConsumer
     {
         byte[] body = ea.Body.ToArray();
         string message = Encoding.UTF8.GetString(body);
-        
+
         RankTask? task = JsonSerializer.Deserialize<RankTask>(message);
-        
+
         if (task == null)
         {
             Console.WriteLine("Ошибка: не удалось десериализовать сообщение");
@@ -172,7 +173,7 @@ public class Consumer : IConsumer
 
         int totalChars = text.Length;
         int nonAlphabetChars = 0;
-        
+
         foreach (char c in text)
         {
             if (!IsAlphabetic(c))
@@ -183,12 +184,12 @@ public class Consumer : IConsumer
 
         return (double)nonAlphabetChars / totalChars;
     }
-    
+
     private bool IsAlphabetic(char c)
     {
-        return (c >= 'A' && c <= 'Z') ||  
+        return (c >= 'A' && c <= 'Z') ||
                (c >= 'a' && c <= 'z') ||
-               (c >= 'А' && c <= 'Я') ||  
+               (c >= 'А' && c <= 'Я') ||
                (c >= 'а' && c <= 'я') ||
                c == 'Ё' || c == 'ё';
     }

@@ -6,7 +6,6 @@ namespace Valuator.Services;
 public class ProducerService : IProducerService
 {
     private readonly string _exchangeName;
-    private readonly string _queueName;
     private readonly string _routingKey;
     private readonly ILogger<ProducerService> _logger;
 
@@ -14,7 +13,6 @@ public class ProducerService : IProducerService
     {
         _logger = logger;
         _exchangeName = Environment.GetEnvironmentVariable("RABBITMQ_EXCHANGE")!;
-        _queueName = Environment.GetEnvironmentVariable("RABBITMQ_QUEUE")!;
         _routingKey = Environment.GetEnvironmentVariable("RABBITMQ_ROUTING_KEY")!;
     }
 
@@ -27,7 +25,7 @@ public class ProducerService : IProducerService
             byte[] messageData = Encoding.UTF8.GetBytes(message);
 
             _logger.LogDebug("Отправка сообщения: {Message}", message);
-
+            //mandatory  что это
             await channel.BasicPublishAsync(
                 exchange: _exchangeName,
                 routingKey: _routingKey,                   
@@ -69,7 +67,6 @@ public class ProducerService : IProducerService
             connection = await factory.CreateConnectionAsync(cancellationToken);
             channel = await connection.CreateChannelAsync(null, cancellationToken);
 
-            await DeclareTopologyAsync(channel, cancellationToken);
             return (connection, channel);
         }
         catch
@@ -87,33 +84,5 @@ public class ProducerService : IProducerService
             throw;
         }
     }
-
-    private async Task DeclareTopologyAsync(IChannel channel, CancellationToken ct)
-    {
-        await channel.ExchangeDeclareAsync(
-            exchange: _exchangeName,
-            type: ExchangeType.Direct,
-            durable: true,
-            autoDelete: false,
-            arguments: null,
-            cancellationToken: ct
-        );
-
-        await channel.QueueDeclareAsync(
-            queue: _queueName,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null,         
-            cancellationToken: ct
-        );
-
-        await channel.QueueBindAsync(
-            queue: _queueName,
-            exchange: _exchangeName,
-            routingKey: _routingKey,
-            arguments: null,
-            cancellationToken: ct
-        );
-    }
+    
 }

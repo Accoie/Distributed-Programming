@@ -43,7 +43,7 @@ public class IndexModel : PageModel
         RankTask rankTask = new RankTask
         {
             Id = id,
-            Text = text,
+            TextKey = textKey,
             RankKey = rankKey,
             CreatedAt = DateTime.UtcNow,
             RetryCount = 0
