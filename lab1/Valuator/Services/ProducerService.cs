@@ -25,7 +25,6 @@ public class ProducerService : IProducerService
             byte[] messageData = Encoding.UTF8.GetBytes(message);
 
             _logger.LogDebug("Отправка сообщения: {Message}", message);
-            //mandatory  что это
             await channel.BasicPublishAsync(
                 exchange: _exchangeName,
                 routingKey: _routingKey,                   
