@@ -1,4 +1,4 @@
-﻿namespace Valuator.Services;
+﻿namespace Valuator.Producers;
 
 public interface IProducerService
 {

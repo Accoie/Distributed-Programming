@@ -5,7 +5,7 @@ include:
   - docker-compose.valuators.yml
   - docker-compose.rank-calculators.yml
   - docker-compose.nginx.yml
-
+  - docker-compose.events-logger.yml  
 volumes:
   redis-data:
   rabbitmq-data:

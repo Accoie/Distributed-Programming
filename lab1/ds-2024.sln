@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RankCalculator", "RankCalcu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{8D9BFCDA-EEDE-45C9-9E42-448AF8E05499}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventsLogger", "EventsLogger\EventsLogger.csproj", "{BDCEB5E3-417C-4820-9F13-728330B6F23C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{8D9BFCDA-EEDE-45C9-9E42-448AF8E05499}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D9BFCDA-EEDE-45C9-9E42-448AF8E05499}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D9BFCDA-EEDE-45C9-9E42-448AF8E05499}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDCEB5E3-417C-4820-9F13-728330B6F23C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDCEB5E3-417C-4820-9F13-728330B6F23C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDCEB5E3-417C-4820-9F13-728330B6F23C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDCEB5E3-417C-4820-9F13-728330B6F23C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,16 +3,18 @@ using System.Text;
 using System.Text.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RankCalculator.Producers;
 using Shared;
 using StackExchange.Redis;
 
-namespace RankCalculator;
+namespace RankCalculator.Consumers;
 
 public class Consumer : IConsumer
 {
     private readonly IDatabase _redisDb;
     private IChannel? _channel;
     private IConnection? _connection;
+    private IEventProducerService _eventProducerService;
     private readonly string _rabbitQueue;
     private readonly string _rabbitHost;
     private readonly int _rabbitPort;
@@ -21,10 +23,10 @@ public class Consumer : IConsumer
     private readonly string _rabbitExchange;
     private readonly string _routingKey;
 
-    public Consumer(IDatabase redisDb)
+    public Consumer(IDatabase redisDb, IEventProducerService eventProducerService)
     {
         _redisDb = redisDb;
-
+        _eventProducerService = eventProducerService;
         _rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST")!;
         _rabbitPort = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT")!);
         _rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_USER")!;
@@ -130,10 +132,6 @@ public class Consumer : IConsumer
         catch (Exception ex)
         {
             Console.WriteLine($"Ошибка обработки: {ex.Message}");
-            if (_channel != null)
-            {
-                await _channel.BasicNackAsync(ea.DeliveryTag, false, true);
-            }
         }
     }
 
@@ -144,9 +142,9 @@ public class Consumer : IConsumer
         string text = _redisDb.StringGet(task.TextKey)!;
         double rank = CalculateRank(text);
         await _redisDb.StringSetAsync(task.RankKey, rank.ToString(CultureInfo.InvariantCulture));
-
+        await _eventProducerService.PublishRankEventAsync(task.Id, rank);
         await _channel!.BasicAckAsync(ea.DeliveryTag, false);
-        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Готово: {task.Id} → ранг = {rank:F4}");
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Готово: {task.Id} ранг = {rank:F4}");
     }
 
     private async Task<RankTask?> ExtractTaskFromMessageAsync(BasicDeliverEventArgs ea)

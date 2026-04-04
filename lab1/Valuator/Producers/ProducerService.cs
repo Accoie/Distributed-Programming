@@ -1,19 +1,27 @@
 ﻿using System.Text;
 using RabbitMQ.Client;
 
-namespace Valuator.Services;
+namespace Valuator.Producers;
 
 public class ProducerService : IProducerService
 {
     private readonly string _exchangeName;
     private readonly string _routingKey;
     private readonly ILogger<ProducerService> _logger;
+    private readonly string _rabbitHost;
+    private readonly int _rabbitPort;
+    private readonly string _rabbitUser;
+    private readonly string _rabbitPass;
 
     public ProducerService( ILogger<ProducerService> logger)
     {
         _logger = logger;
         _exchangeName = Environment.GetEnvironmentVariable("RABBITMQ_EXCHANGE")!;
         _routingKey = Environment.GetEnvironmentVariable("RABBITMQ_ROUTING_KEY")!;
+        _rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST")!;
+        _rabbitPort = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT")!);
+        _rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_USER")!;
+        _rabbitPass = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD")!;
     }
 
     public async Task PublishMessageAsync(string message, CancellationToken cancellationToken = default)
@@ -55,10 +63,10 @@ public class ProducerService : IProducerService
         {
             ConnectionFactory factory = new ConnectionFactory
             {
-                HostName = Environment.GetEnvironmentVariable("RABBITMQ_HOST")!,
-                Port = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT")!),
-                UserName = Environment.GetEnvironmentVariable("RABBITMQ_USER")!,
-                Password = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD")!,
+                HostName = _rabbitHost,
+                Port = _rabbitPort,
+                UserName = _rabbitUser,
+                Password = _rabbitPass,
                 AutomaticRecoveryEnabled = false,
                 TopologyRecoveryEnabled = false
             };

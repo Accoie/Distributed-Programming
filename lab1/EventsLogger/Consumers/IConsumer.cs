@@ -1,4 +1,4 @@
-﻿namespace RankCalculator;
+﻿namespace EventsLogger.Consumers;
 
 public interface IConsumer
 {

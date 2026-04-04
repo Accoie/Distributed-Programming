@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
-using Valuator.Services;
+using Valuator.Producers;
 
 namespace Valuator;
 
@@ -21,7 +21,9 @@ public class  Program
         {
             options.Conventions.ConfigureFilter( new IgnoreAntiforgeryTokenAttribute() );
         } );
+        
         builder.Services.AddScoped<IProducerService, ProducerService>();  
+        builder.Services.AddScoped<ISimilarityEventProducer, SimilarityEventProducer>();
         WebApplication app = builder.Build();
 
         if (!app.Environment.IsDevelopment())
