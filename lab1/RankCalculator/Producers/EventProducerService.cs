@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 using RabbitMQ.Client;
+using Shared.Configs;
 using Shared.Events;
 
 namespace RankCalculator.Producers;
@@ -16,23 +17,19 @@ public class EventProducerService : IEventProducerService
     
     private IConnection? _connection;
     private IChannel? _channel;
-    private bool _isConnected;
 
     public EventProducerService()
     {
-        _eventsExchange = Environment.GetEnvironmentVariable("RABBITMQ_EVENTS_EXCHANGE")!;
-        _rankRoutingKey = Environment.GetEnvironmentVariable("RABBITMQ_RANK_ROUTING_KEY")!;
-        _rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST")!;
-        _rabbitPort = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT")!);
-        _rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_USER")!;
-        _rabbitPass = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD")!;
-        
+        _eventsExchange = Environment.GetEnvironmentVariable(RabbitMqConfig.EventsExchange)!;
+        _rankRoutingKey = Environment.GetEnvironmentVariable(RabbitMqConfig.RankCalculatedEventRoutingKey)!;
+        _rabbitHost = Environment.GetEnvironmentVariable(RabbitMqConfig.Host)!;
+        _rabbitPort = int.Parse(Environment.GetEnvironmentVariable(RabbitMqConfig.Port)!);
+        _rabbitUser = Environment.GetEnvironmentVariable(RabbitMqConfig.User)!;
+        _rabbitPass = Environment.GetEnvironmentVariable(RabbitMqConfig.Password)!;
     }
 
     public async Task ConnectRabbitMq(CancellationToken cancellationToken = default)
     {
-        if (_isConnected) return;
-
         Console.WriteLine($"Подключение к RabbitMQ: {_rabbitHost}:{_rabbitPort}");
 
         ConnectionFactory factory = new ConnectionFactory
@@ -52,7 +49,6 @@ public class EventProducerService : IEventProducerService
             exchange: _eventsExchange,
             type: ExchangeType.Direct,
             durable: true,
-            autoDelete: false,
             cancellationToken: cancellationToken
         );
 
@@ -69,11 +65,6 @@ public class EventProducerService : IEventProducerService
 
     public async Task PublishMessageAsync(string message, CancellationToken cancellationToken = default)
     {
-        if (!_isConnected)
-        {
-            await ConnectRabbitMq(cancellationToken);
-        }
-
         byte[] messageData = Encoding.UTF8.GetBytes(message);
 
         await _channel!.BasicPublishAsync(
@@ -98,7 +89,5 @@ public class EventProducerService : IEventProducerService
             await _connection.CloseAsync(cancellationToken);
             await _connection.DisposeAsync();
         }
-        
-        _isConnected = false;
     }
 }

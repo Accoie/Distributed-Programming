@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using RabbitMQ.Client;
+using Shared.Configs;
 
 namespace Valuator.Producers;
 
@@ -7,21 +8,22 @@ public class ProducerService : IProducerService
 {
     private readonly string _exchangeName;
     private readonly string _routingKey;
-    private readonly ILogger<ProducerService> _logger;
     private readonly string _rabbitHost;
     private readonly int _rabbitPort;
-    private readonly string _rabbitUser;
     private readonly string _rabbitPass;
+    private readonly string _rabbitUser;
 
+    private readonly ILogger<ProducerService> _logger;
+    
     public ProducerService( ILogger<ProducerService> logger)
     {
         _logger = logger;
-        _exchangeName = Environment.GetEnvironmentVariable("RABBITMQ_EXCHANGE")!;
-        _routingKey = Environment.GetEnvironmentVariable("RABBITMQ_ROUTING_KEY")!;
-        _rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST")!;
-        _rabbitPort = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT")!);
-        _rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_USER")!;
-        _rabbitPass = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD")!;
+        _exchangeName = Environment.GetEnvironmentVariable(RabbitMqConfig.ValuatorExchange)!;
+        _routingKey = Environment.GetEnvironmentVariable(RabbitMqConfig.ValuatorRoutingKey)!;
+        _rabbitHost = Environment.GetEnvironmentVariable(RabbitMqConfig.Host)!;
+        _rabbitPort = int.Parse(Environment.GetEnvironmentVariable(RabbitMqConfig.Port)!);
+        _rabbitUser = Environment.GetEnvironmentVariable(RabbitMqConfig.User)!;
+        _rabbitPass = Environment.GetEnvironmentVariable(RabbitMqConfig.Password)!;
     }
 
     public async Task PublishMessageAsync(string message, CancellationToken cancellationToken = default)
@@ -33,6 +35,7 @@ public class ProducerService : IProducerService
             byte[] messageData = Encoding.UTF8.GetBytes(message);
 
             _logger.LogDebug("Отправка сообщения: {Message}", message);
+            
             await channel.BasicPublishAsync(
                 exchange: _exchangeName,
                 routingKey: _routingKey,                   

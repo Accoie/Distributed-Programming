@@ -2,14 +2,13 @@
 using System.Text.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using Shared.Configs;
 using Shared.Events;
 
 namespace EventsLogger.Consumers;
 
 public class Consumer : IConsumer
 {
-    private IChannel? _channel;
-    private IConnection? _connection;
     private readonly string _rabbitHost;
     private readonly int _rabbitPort;
     private readonly string _rabbitUser;
@@ -19,16 +18,19 @@ public class Consumer : IConsumer
     private readonly string _rankRoutingKey;
     private readonly string[] _routingKeys;
     private string? _rabbitQueue;
-
+    
+    private IChannel? _channel;
+    private IConnection? _connection;
+    
     public Consumer()
     {
-        _rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST")!;
-        _rabbitPort = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT")!);
-        _rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_USER")!;
-        _rabbitPass = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD")!;
-        _rabbitExchange = Environment.GetEnvironmentVariable("RABBITMQ_EXCHANGE")!;
-        _similarityRoutingKey = Environment.GetEnvironmentVariable("RABBITMQ_SIMILARITY_ROUTING_KEY")!;
-        _rankRoutingKey = Environment.GetEnvironmentVariable("RABBITMQ_RANK_ROUTING_KEY")!;
+        _rabbitHost = Environment.GetEnvironmentVariable(RabbitMqConfig.Host)!;
+        _rabbitPort = int.Parse(Environment.GetEnvironmentVariable(RabbitMqConfig.Port)!);
+        _rabbitUser = Environment.GetEnvironmentVariable(RabbitMqConfig.User)!;
+        _rabbitPass = Environment.GetEnvironmentVariable(RabbitMqConfig.Password)!;
+        _rabbitExchange = Environment.GetEnvironmentVariable(RabbitMqConfig.EventsExchange)!;
+        _similarityRoutingKey = Environment.GetEnvironmentVariable(RabbitMqConfig.SimilarityRoutingKey)!;
+        _rankRoutingKey = Environment.GetEnvironmentVariable(RabbitMqConfig.RankCalculatedEventRoutingKey)!;
 
         _routingKeys = new[] { _rankRoutingKey, _similarityRoutingKey };
     }
@@ -69,10 +71,7 @@ public class Consumer : IConsumer
 
         await _channel.QueueDeclareAsync(
             queue: queueName,
-            durable: false,
-            exclusive: true,
-            autoDelete: true,
-            arguments: null
+            autoDelete: true
         );
 
         foreach (string routingKey in _routingKeys)
@@ -99,7 +98,6 @@ public class Consumer : IConsumer
             UserName = _rabbitUser,
             Password = _rabbitPass,
             Port = _rabbitPort,
-            AutomaticRecoveryEnabled = true
         };
 
         _connection = await factory.CreateConnectionAsync();

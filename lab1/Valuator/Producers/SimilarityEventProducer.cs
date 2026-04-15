@@ -9,11 +9,12 @@ public class SimilarityEventProducer : ISimilarityEventProducer
 {
     private readonly string _eventsExchange;
     private readonly string _similarityRoutingKey;
-    private readonly ILogger<SimilarityEventProducer> _logger;
     private readonly string _rabbitHost;
     private readonly int _rabbitPort;
     private readonly string _rabbitUser;
     private readonly string _rabbitPass;
+    
+    private readonly ILogger<SimilarityEventProducer> _logger;
 
     public SimilarityEventProducer(ILogger<SimilarityEventProducer> logger)
     {

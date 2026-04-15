@@ -5,16 +5,14 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RankCalculator.Producers;
 using Shared;
+using Shared.Configs;
 using StackExchange.Redis;
 
 namespace RankCalculator.Consumers;
 
 public class Consumer : IConsumer
 {
-    private readonly IDatabase _redisDb;
-    private IChannel? _channel;
-    private IConnection? _connection;
-    private IEventProducerService _eventProducerService;
+
     private readonly string _rabbitQueue;
     private readonly string _rabbitHost;
     private readonly int _rabbitPort;
@@ -22,18 +20,23 @@ public class Consumer : IConsumer
     private readonly string _rabbitPass;
     private readonly string _rabbitExchange;
     private readonly string _routingKey;
-
+    
+    private IChannel? _channel;
+    private IConnection? _connection;
+    private readonly IEventProducerService _eventProducerService;
+    private readonly IDatabase _redisDb;
+    
     public Consumer(IDatabase redisDb, IEventProducerService eventProducerService)
     {
         _redisDb = redisDb;
         _eventProducerService = eventProducerService;
-        _rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST")!;
-        _rabbitPort = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT")!);
-        _rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_USER")!;
-        _rabbitPass = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD")!;
-        _rabbitQueue = Environment.GetEnvironmentVariable("RABBITMQ_QUEUE")!;
-        _rabbitExchange = Environment.GetEnvironmentVariable("RABBITMQ_EXCHANGE")!;
-        _routingKey = Environment.GetEnvironmentVariable("RABBITMQ_ROUTING_KEY")!;
+        _rabbitHost = Environment.GetEnvironmentVariable(RabbitMqConfig.Host)!;
+        _rabbitPort = int.Parse(Environment.GetEnvironmentVariable(RabbitMqConfig.Port)!);
+        _rabbitUser = Environment.GetEnvironmentVariable(RabbitMqConfig.User)!;
+        _rabbitPass = Environment.GetEnvironmentVariable(RabbitMqConfig.Password)!;
+        _rabbitQueue = Environment.GetEnvironmentVariable(RabbitMqConfig.Queue)!;
+        _rabbitExchange = Environment.GetEnvironmentVariable(RabbitMqConfig.ValuatorExchange)!;
+        _routingKey = Environment.GetEnvironmentVariable(RabbitMqConfig.ValuatorRoutingKey)!;
     }
 
     public async Task ConnectRabbitMq()
