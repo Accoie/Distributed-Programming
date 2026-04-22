@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
 namespace Valuator.Pages;
@@ -21,13 +15,23 @@ public class SummaryModel : PageModel
 
     public double Rank { get; set; }
     public double Similarity { get; set; }
+    public string TextId { get; set; } = string.Empty;
 
     public async Task OnGet(string id)
     {
         _logger.LogDebug(id);
+        TextId = id;
 
-        Rank = (double) await _database.StringGetAsync( $"RANK-{id}" );
-        Similarity = ( double ) await _database.StringGetAsync( $"SIMILARITY-{id}" );
-        // TODO: (pa1) проинициализировать свойства Rank и Similarity значениями из БД (Redis)
+        RedisValue rankResult = await _database.StringGetAsync($"RANK-{id}");
+        if (rankResult.HasValue && double.TryParse(rankResult.ToString(), out double rank))
+        {
+            Rank = rank;
+        }
+        
+        RedisValue similarityResult = await _database.StringGetAsync($"SIMILARITY-{id}");
+        if (similarityResult.HasValue && double.TryParse(similarityResult.ToString(), out double similarity))
+        {
+            Similarity = similarity;
+        }
     }
 }

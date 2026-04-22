@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using RabbitMQ.Client;
@@ -141,6 +141,10 @@ public class Consumer : IConsumer
     private async Task HandleTask(BasicDeliverEventArgs ea, RankTask task)
     {
         Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Обработка задачи: {task.Id}");
+        
+        TimeSpan interval = TimeSpan.FromSeconds(new Random().Next(3, 15));
+        Console.WriteLine($"Waiting {interval.TotalSeconds} seconds");
+        await Task.Delay(interval);
         
         string text = _redisDb.StringGet(task.TextKey)!;
         double rank = CalculateRank(text);

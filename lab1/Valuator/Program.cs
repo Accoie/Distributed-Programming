@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
+using Valuator.Consumers;
+using Valuator.Hubs;
 using Valuator.Producers;
 
 namespace Valuator;
@@ -24,6 +26,8 @@ public class  Program
         
         builder.Services.AddScoped<IProducerService, ProducerService>();  
         builder.Services.AddScoped<ISimilarityEventProducer, SimilarityEventProducer>();
+        builder.Services.AddSignalR();
+        builder.Services.AddHostedService<RankCalculatedEventConsumer>();
         WebApplication app = builder.Build();
 
         if (!app.Environment.IsDevelopment())
@@ -37,6 +41,7 @@ public class  Program
         app.UseAuthorization();
 
         app.MapRazorPages();
+        app.MapHub<SummaryHub>("/summaryHub");
 
         app.Run();
     }

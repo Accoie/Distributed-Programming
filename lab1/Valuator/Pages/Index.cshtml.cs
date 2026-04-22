@@ -58,7 +58,7 @@ public class IndexModel : PageModel
         bool isNewText = await _database.SetAddAsync( "UNIQUE-TEXTS", text );
         string similarityKey = "SIMILARITY-" + id;
         await _database.StringSetAsync( similarityKey, isNewText ? "0" : "1" );
-        await _similarityEventProducer.PublishSimilarityEventAsync( similarityKey, isNewText ? 0 : 1 );
+        await _similarityEventProducer.PublishSimilarityEventAsync( id, isNewText ? 0 : 1 );
         return Redirect( $"summary?id={id}" );
     }
 }

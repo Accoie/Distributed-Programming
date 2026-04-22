@@ -1,5 +1,4 @@
-﻿using System.Text;
-using RankCalculator.Consumers;
+﻿using RankCalculator.Consumers;
 using RankCalculator.Producers;
 using StackExchange.Redis;
 
