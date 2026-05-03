@@ -1,4 +1,3 @@
-using Shared;
 using Shared.Enums;
 using StackExchange.Redis;
 

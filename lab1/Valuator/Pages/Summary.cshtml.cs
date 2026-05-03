@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Shared;
 using Shared.Helpers;
 using StackExchange.Redis;
 using Valuator.Services;
 
 namespace Valuator.Pages;
+
 public class SummaryModel : PageModel
 {
     private readonly ILogger<SummaryModel> _logger;
