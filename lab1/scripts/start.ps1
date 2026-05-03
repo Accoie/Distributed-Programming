@@ -12,7 +12,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "- Nginx LB: http://localhost:8080"
     Write-Host "- Redis: localhost:6379"
     
-    # Показать статус контейнеров
+
     Write-Host ""
     Write-Host "Container status:" -ForegroundColor Yellow
     docker-compose ps

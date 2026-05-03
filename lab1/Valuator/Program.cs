@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using StackExchange.Redis;
 using Valuator.Producers;
+using Valuator.Services;
 
 namespace Valuator;
 
@@ -10,12 +10,11 @@ public class  Program
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddSingleton( sp =>
-        {
-            string? configuration = builder.Configuration.GetConnectionString( "Redis" );
-            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect( configuration );
-            return redis.GetDatabase();
-        } );
+
+        builder.Services.AddSingleton<RedisConnectionFactory>();
+        
+
+        builder.Services.AddSingleton<RedisService>();
 
         builder.Services.AddRazorPages( options =>
         {

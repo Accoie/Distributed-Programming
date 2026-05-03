@@ -1,7 +1,7 @@
-﻿using System.Text;
 using RankCalculator.Consumers;
 using RankCalculator.Producers;
 using StackExchange.Redis;
+using RankCalculator.Services;
 
 namespace RankCalculator;
 
@@ -12,6 +12,7 @@ public static class Program
     private static IConsumer? _consumer;
     private static IEventProducerService? _eventProducerService;
     private static CancellationTokenSource _cts = new();
+    private static RedisConnectionFactory? _redisConnectionFactory;
 
     static async Task Main()
     {
@@ -20,7 +21,7 @@ public static class Program
             await ConnectRedis();
             _eventProducerService = new EventProducerService();
             await _eventProducerService.ConnectRabbitMq();
-            _consumer = new Consumer(_redisDb!, _eventProducerService);
+            _consumer = new Consumer(_redisDb!, _eventProducerService, _redisConnectionFactory!);
             await _consumer.ConnectRabbitMq();
             await Task.Delay(Timeout.Infinite, _cts.Token);
         }
@@ -68,5 +69,8 @@ public static class Program
         _redisDb = _redis.GetDatabase();
         await _redisDb.PingAsync();
         Console.WriteLine("Подключено к Redis");
+        
+
+        _redisConnectionFactory = new RedisConnectionFactory();
     }
 }

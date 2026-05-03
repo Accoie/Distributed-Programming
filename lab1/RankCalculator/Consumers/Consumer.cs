@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using RabbitMQ.Client;
@@ -7,12 +7,12 @@ using RankCalculator.Producers;
 using Shared;
 using Shared.Configs;
 using StackExchange.Redis;
+using RankCalculator.Services;
 
 namespace RankCalculator.Consumers;
 
 public class Consumer : IConsumer
 {
-
     private readonly string _rabbitQueue;
     private readonly string _rabbitHost;
     private readonly int _rabbitPort;
@@ -25,11 +25,13 @@ public class Consumer : IConsumer
     private IConnection? _connection;
     private readonly IEventProducerService _eventProducerService;
     private readonly IDatabase _redisDb;
-    
-    public Consumer(IDatabase redisDb, IEventProducerService eventProducerService)
+    private readonly RedisConnectionFactory _redisConnectionFactory;
+
+    public Consumer(IDatabase redisDb, IEventProducerService eventProducerService, RedisConnectionFactory redisConnectionFactory)
     {
         _redisDb = redisDb;
         _eventProducerService = eventProducerService;
+        _redisConnectionFactory = redisConnectionFactory;
         _rabbitHost = Environment.GetEnvironmentVariable(RabbitMqConfig.Host)!;
         _rabbitPort = int.Parse(Environment.GetEnvironmentVariable(RabbitMqConfig.Port)!);
         _rabbitUser = Environment.GetEnvironmentVariable(RabbitMqConfig.User)!;
@@ -142,9 +144,35 @@ public class Consumer : IConsumer
     {
         Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Обработка задачи: {task.Id}");
         
-        string text = _redisDb.StringGet(task.TextKey)!;
+
+        string shardMapKey = $"SHARD-MAP-{task.Id}";
+        string? regionCode = _redisDb.StringGet(shardMapKey);
+        
+        if (string.IsNullOrEmpty(regionCode))
+        {
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Ошибка: не найдена информация о регионе для задачи {task.Id}");
+            await _channel!.BasicNackAsync(ea.DeliveryTag, false, false);
+            return;
+        }
+        
+
+        Console.WriteLine($"LOOKUP: {task.Id}, {regionCode}");
+        
+        // Get text from regional database
+        IDatabase regionalDatabase = regionCode switch
+        {
+            "RU" => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_RU") ?? "localhost:6001"),
+            "EU" => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_EU") ?? "localhost:6002"),
+            "ASIA" => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_ASIA") ?? "localhost:6003"),
+            _ => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_EU") ?? "localhost:6002")
+        };
+        
+        string text = regionalDatabase.StringGet(task.TextKey)!;
         double rank = CalculateRank(text);
-        await _redisDb.StringSetAsync(task.RankKey, rank.ToString(CultureInfo.InvariantCulture));
+        
+
+        await regionalDatabase.StringSetAsync(task.RankKey, rank.ToString(CultureInfo.InvariantCulture));
+        
         await _eventProducerService.PublishRankEventAsync(task.Id, rank);
         await _channel!.BasicAckAsync(ea.DeliveryTag, false);
         Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Готово: {task.Id} ранг = {rank:F4}");

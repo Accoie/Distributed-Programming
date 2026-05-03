@@ -1,33 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using Valuator.Services;
 
 namespace Valuator.Pages;
 public class SummaryModel : PageModel
 {
     private readonly ILogger<SummaryModel> _logger;
-    private readonly IDatabase _database;
+    private readonly RedisService _redisService;
 
-    public SummaryModel(ILogger<SummaryModel> logger, IDatabase database)
+    public SummaryModel(ILogger<SummaryModel> logger, RedisService redisService)
     {
         _logger = logger;
-        _database = database;
+        _redisService = redisService;
     }
 
     public double Rank { get; set; }
     public double Similarity { get; set; }
 
-    public async Task OnGet(string id)
+    public async Task OnGetAsync(string id, string region = "EU")
     {
-        _logger.LogDebug(id);
+        _logger.LogDebug("LOOKUP: {Id}, {Region}", id, region);
 
-        Rank = (double) await _database.StringGetAsync( $"RANK-{id}" );
-        Similarity = ( double ) await _database.StringGetAsync( $"SIMILARITY-{id}" );
-        // TODO: (pa1) проинициализировать свойства Rank и Similarity значениями из БД (Redis)
+        IDatabase db = _redisService.GetDatabaseForRegion(region);
+        Rank = (double)await db.StringGetAsync($"RANK-{id}");
+        Similarity = (double)await db.StringGetAsync($"SIMILARITY-{id}");
     }
 }

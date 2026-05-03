@@ -1,9 +1,9 @@
-﻿x-valuator-common: &valuator-common
+x-valuator-common: &valuator-common
   build:
     context: .
     dockerfile: Valuator/Dockerfile
   depends_on:
-    redis:
+    redis-main:
       condition: service_healthy
     rabbitmq:
       condition: service_healthy
@@ -19,6 +19,10 @@
     - RABBITMQ_USER=${RABBITMQ_USER}
     - RABBITMQ_ROUTING_KEY=${RABBITMQ_ROUTING_KEY}
     - RABBITMQ_SIMILARITY_ROUTING_KEY=${RABBITMQ_SIMILARITY_ROUTING_KEY}
+    - DB_MAIN=${DB_MAIN}
+    - DB_EU=${DB_EU}
+    - DB_RU=${DB_RU}
+    - DB_ASIA=${DB_ASIA}
   expose:
     - "80"
   restart: unless-stopped

@@ -1,9 +1,9 @@
-﻿x-rank-calculator-common: &rank-calculator-common
+x-rank-calculator-common: &rank-calculator-common
   build:
     context: .
     dockerfile: RankCalculator/Dockerfile
   depends_on:
-    redis:
+    redis-main:
       condition: service_healthy
     rabbitmq:
       condition: service_healthy
@@ -18,6 +18,10 @@
     - RABBITMQ_ROUTING_KEY=${RABBITMQ_ROUTING_KEY}
     - RABBITMQ_EVENTS_EXCHANGE=${RABBITMQ_EVENTS_EXCHANGE}
     - RABBITMQ_RANK_ROUTING_KEY=${RABBITMQ_RANK_ROUTING_KEY}
+    - DB_MAIN=${DB_MAIN}
+    - DB_EU=${DB_EU}
+    - DB_RU=${DB_RU}
+    - DB_ASIA=${DB_ASIA}
   restart: unless-stopped
 
 services:
