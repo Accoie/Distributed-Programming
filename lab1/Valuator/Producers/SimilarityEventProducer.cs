@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 using RabbitMQ.Client;
+using Shared.Configs;
 using Shared.Events;
 
 namespace Valuator.Producers;
@@ -19,12 +20,12 @@ public class SimilarityEventProducer : ISimilarityEventProducer
     public SimilarityEventProducer(ILogger<SimilarityEventProducer> logger)
     {
         _logger = logger;
-        _eventsExchange = Environment.GetEnvironmentVariable("RABBITMQ_EVENTS_EXCHANGE")!;
-        _similarityRoutingKey = Environment.GetEnvironmentVariable("RABBITMQ_SIMILARITY_ROUTING_KEY")!;
-        _rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST")!;
-        _rabbitPort = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT")!);
-        _rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_USER")!;
-        _rabbitPass = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD")!;
+        _eventsExchange = Environment.GetEnvironmentVariable(RabbitMqConfig.EventsExchange)!;
+        _similarityRoutingKey = Environment.GetEnvironmentVariable(RabbitMqConfig.SimilarityRoutingKey)!;
+        _rabbitHost = Environment.GetEnvironmentVariable(RabbitMqConfig.Host)!;
+        _rabbitPort = int.Parse(Environment.GetEnvironmentVariable(RabbitMqConfig.Port)!);
+        _rabbitUser = Environment.GetEnvironmentVariable(RabbitMqConfig.User)!;
+        _rabbitPass = Environment.GetEnvironmentVariable(RabbitMqConfig.Password)!;
     }
 
     public async Task PublishSimilarityEventAsync(string textId, 

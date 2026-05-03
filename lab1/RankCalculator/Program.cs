@@ -12,8 +12,8 @@ public static class Program
     private static IConsumer? _consumer;
     private static IEventProducerService? _eventProducerService;
     private static CancellationTokenSource _cts = new();
-    private static RedisConnectionFactory? _redisConnectionFactory;
-
+    private static RedisService? _redisService;
+    
     static async Task Main()
     {
         try
@@ -21,7 +21,7 @@ public static class Program
             await ConnectRedis();
             _eventProducerService = new EventProducerService();
             await _eventProducerService.ConnectRabbitMq();
-            _consumer = new Consumer(_redisDb!, _eventProducerService, _redisConnectionFactory!);
+            _consumer = new Consumer(_redisDb!, _eventProducerService, _redisService!);
             await _consumer.ConnectRabbitMq();
             await Task.Delay(Timeout.Infinite, _cts.Token);
         }
@@ -71,6 +71,6 @@ public static class Program
         Console.WriteLine("Подключено к Redis");
         
 
-        _redisConnectionFactory = new RedisConnectionFactory();
+        _redisService = new RedisService(new RedisConnectionFactory());
     }
 }

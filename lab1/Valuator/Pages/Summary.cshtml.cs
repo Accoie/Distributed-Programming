@@ -23,7 +23,7 @@ public class SummaryModel : PageModel
     {
         _logger.LogDebug("LOOKUP: {Id}, {Region}", id, region);
 
-        IDatabase db = _redisService.GetDatabaseForRegion(CountryRegionMapping.GetRegionByCode(region));
+        IDatabase db = _redisService.GetDatabaseForRegion(CountryRegionHelper.GetRegionByCode(region));
         Rank = (double)await db.StringGetAsync(RedisKeyHelper.CreateRankKey(id));
         Similarity = (double)await db.StringGetAsync(RedisKeyHelper.CreateSimilarityKey(id));
     }

@@ -26,13 +26,13 @@ public class Consumer : IConsumer
     private IConnection? _connection;
     private readonly IEventProducerService _eventProducerService;
     private readonly IDatabase _redisDb;
-    private readonly RedisConnectionFactory _redisConnectionFactory;
+    private readonly RedisService _redisService;
 
-    public Consumer(IDatabase redisDb, IEventProducerService eventProducerService, RedisConnectionFactory redisConnectionFactory)
+    public Consumer(IDatabase redisDb, IEventProducerService eventProducerService, RedisService redisService)
     {
         _redisDb = redisDb;
         _eventProducerService = eventProducerService;
-        _redisConnectionFactory = redisConnectionFactory;
+        _redisService = redisService;
         _rabbitHost = Environment.GetEnvironmentVariable(RabbitMqConfig.Host)!;
         _rabbitPort = int.Parse(Environment.GetEnvironmentVariable(RabbitMqConfig.Port)!);
         _rabbitUser = Environment.GetEnvironmentVariable(RabbitMqConfig.User)!;
@@ -156,14 +156,9 @@ public class Consumer : IConsumer
         }
         
         Console.WriteLine($"LOOKUP: {task.Id}, {regionCode}");
-        
-        IDatabase regionalDatabase = regionCode switch
-        {
-            "RU" => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_RU")!),
-            "EU" => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_EU")!),
-            "ASIA" => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_ASIA")!),
-            _ => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_EU")!)
-        };
+
+        IDatabase regionalDatabase =
+            _redisService.GetDatabaseForRegion(CountryRegionHelper.GetRegionByCode(regionCode));
         
         string text = regionalDatabase.StringGet(task.TextKey)!;
         double rank = CalculateRank(text);

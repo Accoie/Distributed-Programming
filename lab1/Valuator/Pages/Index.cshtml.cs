@@ -42,9 +42,9 @@ public class IndexModel : PageModel
         _logger.LogDebug(text);
 
         string id = Guid.NewGuid().ToString();
-        Country countryEnum = Enum.Parse<Country>(country);;
-        Region region = CountryRegionMapping.GetRegion(countryEnum);
-        string regionCode = CountryRegionMapping.GetRegionCode(region);
+        Enum.TryParse(country, true, out Country countryEnum);
+        Region region = CountryRegionHelper.GetRegion(countryEnum);
+        string regionCode = CountryRegionHelper.GetRegionCode(region);
 
         _logger.LogInformation($"LOOKUP: {id}, {regionCode}");
 

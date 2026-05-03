@@ -2,7 +2,7 @@
 
 namespace Shared.Helpers;
 
-public static class CountryRegionMapping
+public static class CountryRegionHelper
 {
     public static Region GetRegion(Country country)
     {

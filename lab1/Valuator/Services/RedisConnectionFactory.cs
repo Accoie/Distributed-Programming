@@ -17,7 +17,8 @@ public class RedisConnectionFactory
             _connections[connectionString] = connection;
             _databases[connectionString] = database;
         }
-        return database ?? throw new InvalidOperationException($"Failed to create database for connection string: {connectionString}");
+
+        return database;
     }
 
     public void Dispose()

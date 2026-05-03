@@ -1,8 +1,7 @@
-using Shared;
-using Shared.Enums;
+﻿using Shared.Enums;
 using StackExchange.Redis;
 
-namespace Valuator.Services;
+namespace RankCalculator.Services;
 
 public class RedisService
 {
@@ -21,13 +20,13 @@ public class RedisService
     
     public IDatabase GetDatabaseForRegion(Region region)
     {
-        string connectionString = region switch
+        string connectionString = (region switch
         {
-            Region.Ru => Environment.GetEnvironmentVariable("DB_RU")!,
-            Region.Eu => Environment.GetEnvironmentVariable("DB_EU")!,
-            Region.Asia => Environment.GetEnvironmentVariable("DB_ASIA")!,
-            _ => Environment.GetEnvironmentVariable("DB_EU")!
-        };
+            Region.Ru => Environment.GetEnvironmentVariable("DB_RU"),
+            Region.Eu => Environment.GetEnvironmentVariable("DB_EU"),
+            Region.Asia => Environment.GetEnvironmentVariable("DB_ASIA"),
+            _ => Environment.GetEnvironmentVariable("DB_EU")
+        })!;
         return _redisConnectionFactory.GetDatabase(connectionString);
     }
 }
