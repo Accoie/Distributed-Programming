@@ -10,7 +10,7 @@ public class RedisConnectionFactory
 
     public IDatabase GetDatabase(string connectionString)
     {
-        if (!_databases.TryGetValue(connectionString, out IDatabase database))
+        if (!_databases.TryGetValue(connectionString, out IDatabase? database))
         {
             ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(connectionString);
             database = connection.GetDatabase();

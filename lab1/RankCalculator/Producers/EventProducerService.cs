@@ -8,25 +8,15 @@ namespace RankCalculator.Producers;
 
 public class EventProducerService : IEventProducerService
 {
-    private readonly string _eventsExchange;
-    private readonly string _rankRoutingKey;
-    private readonly string _rabbitHost;
-    private readonly int _rabbitPort;
-    private readonly string _rabbitUser;
-    private readonly string _rabbitPass;
+    private readonly string _eventsExchange = Environment.GetEnvironmentVariable(RabbitMqConfig.EventsExchange)!;
+    private readonly string _rankRoutingKey = Environment.GetEnvironmentVariable(RabbitMqConfig.RankCalculatedEventRoutingKey)!;
+    private readonly string _rabbitHost = Environment.GetEnvironmentVariable(RabbitMqConfig.Host)!;
+    private readonly int _rabbitPort = int.Parse(Environment.GetEnvironmentVariable(RabbitMqConfig.Port)!);
+    private readonly string _rabbitUser = Environment.GetEnvironmentVariable(RabbitMqConfig.User)!;
+    private readonly string _rabbitPass = Environment.GetEnvironmentVariable(RabbitMqConfig.Password)!;
     
     private IConnection? _connection;
     private IChannel? _channel;
-
-    public EventProducerService()
-    {
-        _eventsExchange = Environment.GetEnvironmentVariable(RabbitMqConfig.EventsExchange)!;
-        _rankRoutingKey = Environment.GetEnvironmentVariable(RabbitMqConfig.RankCalculatedEventRoutingKey)!;
-        _rabbitHost = Environment.GetEnvironmentVariable(RabbitMqConfig.Host)!;
-        _rabbitPort = int.Parse(Environment.GetEnvironmentVariable(RabbitMqConfig.Port)!);
-        _rabbitUser = Environment.GetEnvironmentVariable(RabbitMqConfig.User)!;
-        _rabbitPass = Environment.GetEnvironmentVariable(RabbitMqConfig.Password)!;
-    }
 
     public async Task ConnectRabbitMq(CancellationToken cancellationToken = default)
     {
@@ -63,7 +53,7 @@ public class EventProducerService : IEventProducerService
         await PublishMessageAsync(message, cancellationToken);
     }
 
-    public async Task PublishMessageAsync(string message, CancellationToken cancellationToken = default)
+    private async Task PublishMessageAsync(string message, CancellationToken cancellationToken = default)
     {
         byte[] messageData = Encoding.UTF8.GetBytes(message);
 

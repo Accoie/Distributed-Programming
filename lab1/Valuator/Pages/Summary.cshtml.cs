@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Shared;
+using Shared.Helpers;
 using StackExchange.Redis;
 using Valuator.Services;
 
@@ -21,8 +23,8 @@ public class SummaryModel : PageModel
     {
         _logger.LogDebug("LOOKUP: {Id}, {Region}", id, region);
 
-        IDatabase db = _redisService.GetDatabaseForRegion(region);
-        Rank = (double)await db.StringGetAsync($"RANK-{id}");
-        Similarity = (double)await db.StringGetAsync($"SIMILARITY-{id}");
+        IDatabase db = _redisService.GetDatabaseForRegion(CountryRegionMapping.GetRegionByCode(region));
+        Rank = (double)await db.StringGetAsync(RedisKeyHelper.CreateRankKey(id));
+        Similarity = (double)await db.StringGetAsync(RedisKeyHelper.CreateSimilarityKey(id));
     }
 }

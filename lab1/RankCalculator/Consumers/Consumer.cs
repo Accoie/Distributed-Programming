@@ -8,6 +8,7 @@ using Shared;
 using Shared.Configs;
 using StackExchange.Redis;
 using RankCalculator.Services;
+using Shared.Helpers;
 
 namespace RankCalculator.Consumers;
 
@@ -75,7 +76,7 @@ public class Consumer : IConsumer
 
         await _channel!.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false);
     }
-
+    
     public async Task ClearConnections()
     {
         if (_channel != null)
@@ -143,9 +144,8 @@ public class Consumer : IConsumer
     private async Task HandleTask(BasicDeliverEventArgs ea, RankTask task)
     {
         Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Обработка задачи: {task.Id}");
-        
 
-        string shardMapKey = $"SHARD-MAP-{task.Id}";
+        string shardMapKey = RedisKeyHelper.CreateShardKey(task.Id);
         string? regionCode = _redisDb.StringGet(shardMapKey);
         
         if (string.IsNullOrEmpty(regionCode))
@@ -155,22 +155,19 @@ public class Consumer : IConsumer
             return;
         }
         
-
         Console.WriteLine($"LOOKUP: {task.Id}, {regionCode}");
         
-        // Get text from regional database
         IDatabase regionalDatabase = regionCode switch
         {
-            "RU" => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_RU") ?? "localhost:6001"),
-            "EU" => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_EU") ?? "localhost:6002"),
-            "ASIA" => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_ASIA") ?? "localhost:6003"),
-            _ => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_EU") ?? "localhost:6002")
+            "RU" => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_RU")!),
+            "EU" => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_EU")!),
+            "ASIA" => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_ASIA")!),
+            _ => _redisConnectionFactory.GetDatabase(Environment.GetEnvironmentVariable("DB_EU")!)
         };
         
         string text = regionalDatabase.StringGet(task.TextKey)!;
         double rank = CalculateRank(text);
         
-
         await regionalDatabase.StringSetAsync(task.RankKey, rank.ToString(CultureInfo.InvariantCulture));
         
         await _eventProducerService.PublishRankEventAsync(task.Id, rank);

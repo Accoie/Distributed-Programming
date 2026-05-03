@@ -1,20 +1,6 @@
-namespace Shared;
+﻿using Shared.Enums;
 
-public enum Country
-{
-    Russia,
-    France,
-    Germany,
-    Uae,
-    India
-}
-
-public enum Region
-{
-    Ru,
-    Eu,
-    Asia
-}
+namespace Shared.Helpers;
 
 public static class CountryRegionMapping
 {
@@ -39,6 +25,17 @@ public static class CountryRegionMapping
             Region.Eu => "EU",
             Region.Asia => "ASIA",
             _ => "EU"
+        };
+    }
+
+    public static Region GetRegionByCode(string code)
+    {
+        return code switch
+        {
+            "RU"=> Region.Ru ,
+            "EU" => Region.Eu,
+            "ASIA" => Region.Asia,
+            _ => Region.Eu
         };
     }
 }

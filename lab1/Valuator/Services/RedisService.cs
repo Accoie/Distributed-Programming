@@ -1,3 +1,5 @@
+using Shared;
+using Shared.Enums;
 using StackExchange.Redis;
 
 namespace Valuator.Services;
@@ -13,17 +15,17 @@ public class RedisService
 
     public IDatabase GetMainDatabase()
     {
-        string? configuration = Environment.GetEnvironmentVariable("DB_MAIN") ?? "localhost:6000";
+        string configuration = Environment.GetEnvironmentVariable("DB_MAIN")!;
         return _redisConnectionFactory.GetDatabase(configuration);
     }
     
-    public IDatabase GetDatabaseForRegion(string regionCode)
+    public IDatabase GetDatabaseForRegion(Region region)
     {
-        string connectionString = regionCode switch
+        string connectionString = region switch
         {
-            "RU" => Environment.GetEnvironmentVariable("DB_RU") ?? "localhost:6001",
-            "EU" => Environment.GetEnvironmentVariable("DB_EU") ?? "localhost:6002",
-            "ASIA" => Environment.GetEnvironmentVariable("DB_ASIA") ?? "localhost:6003",
+            Region.Ru => Environment.GetEnvironmentVariable("DB_RU") ?? "localhost:6001",
+            Region.Eu => Environment.GetEnvironmentVariable("DB_EU") ?? "localhost:6002",
+            Region.Asia => Environment.GetEnvironmentVariable("DB_ASIA") ?? "localhost:6003",
             _ => Environment.GetEnvironmentVariable("DB_EU") ?? "localhost:6002"
         };
         return _redisConnectionFactory.GetDatabase(connectionString);

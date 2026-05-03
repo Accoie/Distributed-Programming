@@ -2,6 +2,8 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Shared;
+using Shared.Enums;
+using Shared.Helpers;
 using StackExchange.Redis;
 using Valuator.Producers;
 using Valuator.Services;
@@ -30,31 +32,51 @@ public class IndexModel : PageModel
     {
     }
 
-    public async Task<IActionResult> OnPostAsync( string text, string country )
+   public async Task<IActionResult> OnPostAsync(string text, string country)
     {
-        if ( string.IsNullOrEmpty( text ) || string.IsNullOrEmpty( country ) )
+        if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(country))
         {
             return Page();
         }
 
-        _logger.LogDebug( text );
+        _logger.LogDebug(text);
 
         string id = Guid.NewGuid().ToString();
-        Country countryEnum = Enum.Parse<Country>(country);
+        Country countryEnum = Enum.Parse<Country>(country);;
         Region region = CountryRegionMapping.GetRegion(countryEnum);
         string regionCode = CountryRegionMapping.GetRegionCode(region);
 
         _logger.LogInformation($"LOOKUP: {id}, {regionCode}");
 
-        string shardMapKey = $"SHARD-MAP-{id}";
+        await SetShardMappingAsync(id, regionCode);
+        await SetTextInRegionalDatabaseAsync(id, text, region);
+        await PublishRankTaskAsync(id, countryEnum);
+        
+        bool isNewText = await CheckAndMarkUniqueTextAsync(text);
+        await PublishSimilarityAsync(id, isNewText);
+
+        return Redirect($"summary?id={id}&region={regionCode}");
+    }
+
+    private async Task SetShardMappingAsync(string id, string regionCode)
+    {
+        string shardMapKey = RedisKeyHelper.CreateShardKey(id);
         IDatabase mainDatabase = _redisService.GetMainDatabase();
         await mainDatabase.StringSetAsync(shardMapKey, regionCode);
+    }
 
-        string textKey = $"TEXT-{id}";
-        IDatabase regionalDatabase = _redisService.GetDatabaseForRegion(regionCode);
+    private async Task SetTextInRegionalDatabaseAsync(string id, string text, Region region)
+    {
+        string textKey = RedisKeyHelper.CreateTextKey(id);
+        IDatabase regionalDatabase = _redisService.GetDatabaseForRegion(region);
         await regionalDatabase.StringSetAsync(textKey, text);
+    }
+
+    private async Task PublishRankTaskAsync(string id, Country countryEnum)
+    {
+        string rankKey = RedisKeyHelper.CreateRankKey(id);
+        string textKey = RedisKeyHelper.CreateTextKey(id);
         
-        string rankKey = $"RANK-{id}";
         RankTask rankTask = new RankTask
         {
             Id = id,
@@ -64,12 +86,22 @@ public class IndexModel : PageModel
             RetryCount = 0,
             Country = countryEnum
         };
+        
         await _producerService.PublishMessageAsync(JsonSerializer.Serialize(rankTask));
+    }
 
-        bool isNewText = await mainDatabase.SetAddAsync( "UNIQUE-TEXTS", text );
-        string similarityKey = $"SIMILARITY-{id}";
-        await mainDatabase.StringSetAsync( similarityKey, isNewText ? "0" : "1" );
-        await _similarityEventProducer.PublishSimilarityEventAsync( similarityKey, isNewText ? 0 : 1 );
-        return Redirect($"summary?id={id}&region={regionCode}");
+    private async Task<bool> CheckAndMarkUniqueTextAsync(string text)
+    {
+        IDatabase mainDatabase = _redisService.GetMainDatabase();
+        return await mainDatabase.SetAddAsync("UNIQUE-TEXTS", text);
+    }
+
+    private async Task PublishSimilarityAsync(string id, bool isNewText)
+    {
+        string similarityKey = RedisKeyHelper.CreateSimilarityKey(id);
+        IDatabase mainDatabase = _redisService.GetMainDatabase();
+        
+        await mainDatabase.StringSetAsync(similarityKey, isNewText ? "0" : "1");
+        await _similarityEventProducer.PublishSimilarityEventAsync(similarityKey, isNewText ? 0 : 1);
     }
 }
