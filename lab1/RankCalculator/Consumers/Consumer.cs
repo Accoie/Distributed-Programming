@@ -156,7 +156,7 @@ public class Consumer : IConsumer
         }
         
         Console.WriteLine($"LOOKUP: {task.Id}, {regionCode}");
-
+    
         IDatabase regionalDatabase =
             _redisService.GetDatabaseForRegion(CountryRegionHelper.GetRegionByCode(regionCode));
         

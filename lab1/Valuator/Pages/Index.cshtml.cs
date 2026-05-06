@@ -32,7 +32,7 @@ public class IndexModel : PageModel
     {
     }
 
-   public async Task<IActionResult> OnPostAsync(string text, string country)
+    public async Task<IActionResult> OnPostAsync(string text, string country)
     {
         if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(country))
         {
@@ -50,14 +50,15 @@ public class IndexModel : PageModel
 
         await SetShardMappingAsync(id, regionCode);
         await SetTextInRegionalDatabaseAsync(id, text, region);
-        await PublishRankTaskAsync(id, countryEnum);
-        
+    
         bool isNewText = await CheckAndMarkUniqueTextAsync(text);
-        await PublishSimilarityAsync(id, isNewText);
+        await PublishSimilarityAsync(id, isNewText, region);
+    
+        await PublishRankTaskAsync(id, countryEnum);
 
         return Redirect($"summary?id={id}&region={regionCode}");
     }
-
+    
     private async Task SetShardMappingAsync(string id, string regionCode)
     {
         string shardMapKey = RedisKeyHelper.CreateShardKey(id);
@@ -84,7 +85,6 @@ public class IndexModel : PageModel
             RankKey = rankKey,
             CreatedAt = DateTime.UtcNow,
             RetryCount = 0,
-            Country = countryEnum
         };
         
         await _producerService.PublishMessageAsync(JsonSerializer.Serialize(rankTask));
@@ -96,12 +96,12 @@ public class IndexModel : PageModel
         return await mainDatabase.SetAddAsync("UNIQUE-TEXTS", text);
     }
 
-    private async Task PublishSimilarityAsync(string id, bool isNewText)
+    private async Task PublishSimilarityAsync(string id, bool isNewText, Region region)
     {
         string similarityKey = RedisKeyHelper.CreateSimilarityKey(id);
-        IDatabase mainDatabase = _redisService.GetMainDatabase();
-        
-        await mainDatabase.StringSetAsync(similarityKey, isNewText ? "0" : "1");
-        await _similarityEventProducer.PublishSimilarityEventAsync(similarityKey, isNewText ? 0 : 1);
-    }
-}
+    
+        IDatabase regionalDatabase = _redisService.GetDatabaseForRegion(region);
+    
+        await regionalDatabase.StringSetAsync(similarityKey, isNewText ? "0" : "1");
+        await _similarityEventProducer.PublishSimilarityEventAsync(id, isNewText ? 0 : 1);
+    }}

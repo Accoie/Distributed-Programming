@@ -9,5 +9,4 @@ public class RankTask
     public string RankKey { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public int RetryCount { get; set; }
-    public Country Country { get; set; }
 }
