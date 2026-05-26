@@ -1,5 +1,4 @@
-﻿using System.Text;
-using RankCalculator.Consumers;
+﻿using RankCalculator.Consumers;
 using RankCalculator.Producers;
 using StackExchange.Redis;
 
@@ -60,7 +59,7 @@ public static class Program
 
     private static async Task ConnectRedis()
     {
-        string redisConnection = Environment.GetEnvironmentVariable("REDIS_CONNECTION")!;
+        string redisConnection = Environment.GetEnvironmentVariable("REDIS_CONNECTION")! + ",password=" + Environment.GetEnvironmentVariable("REDIS_PASSWORD")! + ",abortConnect=false";
 
         Console.WriteLine($"Подключение к Redis: {redisConnection}");
 
